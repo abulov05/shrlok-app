@@ -1,1 +1,1 @@
-# shrlok-app
+# gonka za money

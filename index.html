@@ -2,714 +2,1216 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Shrlok Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Гонка за деньги</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg: #0e0f13;
-            --surface: #121622;
-            --panel: #151a28;
-            --text: #e7e7ea;
-            --muted: #8a8f9b;
-            --border: #232a3c;
-            --accent: #7bd88f;
-            --size: 32px;
-            --speed: 1;
-            --radius: 12px;
-            --shadow: 0 10px 30px rgba(0,0,0,.35);
-        }
-
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #FF6B00;
+            --primary-dark: #E55A00;
+            --secondary: #FF8C00;
+            --bg-dark: #0A0A0F;
+            --bg-card: #14141F;
+            --bg-input: #1A1A2E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8888AA;
+            --text-muted: #555577;
+            --border-color: #2A2A4A;
+            --success: #00E676;
+            --danger: #FF1744;
+            --gold: #FFD700;
+            --mining-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --card-glow: 0 4px 30px rgba(255, 107, 0, 0.15);
         }
 
         body {
-            background: radial-gradient(900px 600px at 10% -10%, #1a2030 0%, transparent 60%),
-                        radial-gradient(900px 600px at 110% 20%, #121520 0%, transparent 60%),
-                        var(--bg);
-            color: var(--text);
-            font: 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
             min-height: 100vh;
-        }
-
-        /* Layout */
-        .wrap {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 16px;
-            padding-bottom: 80px;
-        }
-
-        /* Header */
-        header {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: linear-gradient(180deg, #151a24, #111521);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow);
-        }
-
-        header h1 {
-            font-size: 18px;
-            letter-spacing: 1px;
+            padding: 0;
             margin: 0;
+            overflow-x: hidden;
         }
 
-        header h1::before {
-            content: "> ";
-            color: var(--accent);
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 16px 20px 40px;
+            border-radius: 0 0 30px 30px;
+            position: relative;
         }
 
-        .controls {
+        .header-top {
             display: flex;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .header-logo {
+            display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .controls label {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--muted);
-            font-size: 12px;
-            background: #0f1320;
-            border: 1px solid var(--border);
-            padding: 5px 10px;
-            border-radius: 10px;
+        .header-logo .icon {
+            font-size: 28px;
         }
 
-        .controls input[type="range"] {
-            width: 100px;
+        .header-logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
-        .controls input[type="color"] {
-            width: 28px;
-            height: 28px;
-            border: none;
-            background: transparent;
+        .header-logo span {
+            font-size: 10px;
+            opacity: 0.8;
+            display: block;
+            font-weight: 400;
+        }
+
+        .header-balance {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
             cursor: pointer;
+            transition: 0.3s;
         }
 
-        .controls button {
-            background: #0f1320;
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 6px 12px;
-            border-radius: 10px;
-            cursor: pointer;
+        .header-balance:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header-balance .label {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .header-balance .amount {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header-balance .currency {
             font-size: 12px;
+            opacity: 0.8;
         }
 
-        .controls button.active {
-            outline: 2px solid var(--accent);
-        }
-
-        /* Stats Grid */
-        .stats-grid {
+        /* ===== STATS BAR ===== */
+        .stats-bar {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
         }
 
-        .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 14px;
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item .number {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .stat-item .label {
+            font-size: 9px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
             text-align: center;
         }
 
-        .stat-number {
-            font-size: 28px;
-            font-weight: bold;
-            color: var(--accent);
-            font-family: monospace;
+        .tab-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
         }
 
-        .stat-label {
-            font-size: 10px;
-            color: var(--muted);
-            margin-top: 4px;
-            letter-spacing: 1px;
+        .tab-btn .emoji {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
         }
 
-        /* Search Box */
-        .search-box {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 30px;
-            padding: 10px 16px;
-            margin-bottom: 16px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .search-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            font-size: 14px;
-            color: var(--text);
-            font-family: monospace;
-            outline: none;
-        }
-
-        .search-input::placeholder {
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .search-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 11px;
-            color: var(--accent);
-            cursor: pointer;
-            font-family: monospace;
-            transition: all 0.2s;
-        }
-
-        .search-btn:hover {
-            background: var(--accent);
-            color: #0e0f13;
-        }
-
-        /* Menu Items */
-        .menu-list {
-            display: flex;
-            flex-direction: column;
+        /* ===== GAMES GRID ===== */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .game-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px 8px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .game-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+            box-shadow: var(--card-glow);
+        }
+
+        .game-card .emoji {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .game-card .name {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .game-card .coef {
+            font-size: 10px;
+            color: var(--gold);
+            margin-top: 4px;
+        }
+
+        /* ===== MENU ITEMS ===== */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
         .menu-item {
-            background: var(--surface);
-            border: 1px solid var(--border);
+            background: var(--bg-card);
             border-radius: 14px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border-color);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: 0.3s;
         }
 
         .menu-item:hover {
-            border-color: var(--accent);
+            border-color: var(--primary);
+            box-shadow: var(--card-glow);
+        }
+
+        .menu-item .emoji {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .menu-item .name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* ===== MINING SECTION ===== */
+        .mining-header {
+            background: var(--mining-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mining-header::before {
+            content: '⛏️';
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            font-size: 80px;
+            opacity: 0.1;
+            transform: rotate(15deg);
+        }
+
+        .mining-header .title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mining-header .subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .mining-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .mining-stat {
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .mining-stat .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .mining-stat .label {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        /* Mining Plans */
+        .mining-plans {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mining-plan {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .mining-plan:hover {
+            border-color: var(--primary);
+            box-shadow: var(--card-glow);
             transform: translateX(4px);
         }
 
-        .menu-icon {
-            font-size: 24px;
+        .mining-plan .info {
+            display: flex;
+            flex-direction: column;
         }
 
-        .menu-text {
-            flex: 1;
+        .mining-plan .amount {
+            font-size: 18px;
+            font-weight: 700;
         }
 
-        .menu-title {
+        .mining-plan .details {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+            margin-top: 2px;
+        }
+
+        .mining-plan .details span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mining-plan .profit {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--success);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .mining-plan .profit.high {
+            background: rgba(255, 215, 0, 0.15);
+            color: var(--gold);
+        }
+
+        /* Active Mining */
+        .active-mining {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid rgba(0, 230, 118, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .active-mining .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+        }
+
+        .active-mining .header .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .active-mining .header .status {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.05);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .active-mining .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .active-mining .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--gold));
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .active-mining .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .active-mining .info-grid .item {
+            text-align: center;
+            padding: 8px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+        }
+
+        .active-mining .info-grid .item .value {
             font-size: 14px;
             font-weight: 600;
         }
 
-        .menu-subtitle {
-            font-size: 10px;
-            color: var(--muted);
-            margin-top: 2px;
+        .active-mining .info-grid .item .label {
+            font-size: 9px;
+            color: var(--text-secondary);
         }
 
-        /* Warning */
-        .warning {
-            background: rgba(255, 59, 48, 0.08);
-            border-left: 3px solid #ff3b30;
+        /* Completed Mining */
+        .completed-mining {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .completed-mining .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .completed-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .completed-item:last-child {
+            border-bottom: none;
+        }
+
+        .completed-item .info .amount {
+            font-weight: 600;
+        }
+
+        .completed-item .info .details {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .completed-item .earned {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* Mining Logo */
+        .mining-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 107, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            margin-bottom: 16px;
+        }
+
+        .mining-logo .icon {
+            font-size: 40px;
+            animation: pickaxe 2s ease-in-out infinite;
+        }
+
+        @keyframes pickaxe {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+
+        .mining-logo .text {
+            flex: 1;
+        }
+
+        .mining-logo .text .name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .mining-logo .text .desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Referral Section */
+        .referral-box {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .referral-box .title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .referral-box .title .emoji {
+            font-size: 24px;
+        }
+
+        .referral-box .subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .referral-box .link {
+            background: var(--bg-input);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            word-break: break-all;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .referral-box .link:hover {
+            border-color: var(--primary);
+        }
+
+        .referral-box .link .copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .referral-box .link .copy-btn:hover {
+            background: var(--secondary);
+        }
+
+        .referral-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .referral-stat {
+            background: rgba(255,255,255,0.05);
             padding: 12px;
             border-radius: 10px;
-            font-size: 10px;
-            font-family: monospace;
+            text-align: center;
         }
 
-        /* Tab Bar */
-        .tab-bar {
+        .referral-stat .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .referral-stat .label {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        /* Profile */
+        .profile-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-item .label {
+            color: var(--text-secondary);
+        }
+
+        .profile-item .value {
+            font-weight: 500;
+        }
+
+        .btn-gold {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-gold:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            background: var(--secondary);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        /* ===== BOTTOM NAV ===== */
+        .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(10, 10, 15, 0.95);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border);
-            display: flex;
-            padding: 8px 16px 20px;
-            justify-content: space-around;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 8px 0;
+            padding-bottom: env(safe-area-inset-bottom);
             z-index: 100;
         }
 
-        .tab-item {
+        .nav-item {
             text-align: center;
+            padding: 6px 0;
             cursor: pointer;
-            opacity: 0.5;
-            transition: opacity 0.2s;
+            transition: 0.3s;
+            color: var(--text-secondary);
+            border: none;
+            background: none;
+            font-size: 10px;
         }
 
-        .tab-item.active {
-            opacity: 1;
-        }
-
-        .tab-icon {
+        .nav-item .emoji {
+            display: block;
             font-size: 22px;
+            margin-bottom: 2px;
         }
 
-        .tab-label {
-            font-size: 9px;
-            margin-top: 4px;
-            letter-spacing: 1px;
+        .nav-item.active {
+            color: var(--primary);
         }
 
-        /* Content pages */
-        .content {
-            padding-bottom: 20px;
+        .nav-item:hover {
+            color: var(--primary);
         }
 
-        .hidden {
-            display: none;
-        }
+        /* ===== UTILITY ===== */
+        .mt-10 { margin-top: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-secondary); }
+        .hidden { display: none; }
 
-        .back-btn {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 16px;
-            width: 100%;
-            text-align: center;
-            cursor: pointer;
-            color: var(--text);
-            font-family: monospace;
-            font-size: 12px;
-        }
-
-        .user-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .user-name {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .user-username {
-            font-size: 11px;
-            color: var(--muted);
-            margin-top: 6px;
-        }
-
-        .word-cloud {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .word {
-            background: rgba(123, 216, 143, 0.1);
-            border: 1px solid rgba(123, 216, 143, 0.3);
-            border-radius: 20px;
-            padding: 6px 12px;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-
-        .word:hover {
-            border-color: var(--accent);
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--muted);
-        }
-
-        h3 {
-            font-size: 14px;
-            margin-bottom: 16px;
-            border-left: 3px solid var(--accent);
-            padding-left: 12px;
-        }
-
-        /* Loader animations */
-        .loader {
-            display: inline-grid;
-            place-items: center;
-        }
-
-        .spinner {
-            width: var(--size);
-            height: var(--size);
-            border: calc(var(--size) / 8) solid transparent;
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin calc(0.9s / var(--speed)) linear infinite;
-        }
-
-        .dots-pulse {
-            display: inline-flex;
-            gap: calc(var(--size) / 6);
-        }
-
-        .dots-pulse span {
-            width: calc(var(--size) / 4);
-            height: calc(var(--size) / 4);
-            border-radius: 50%;
-            background: var(--accent);
-            opacity: 0.5;
-            animation: pulse calc(1.2s * var(--speed)) ease-in-out infinite;
-        }
-
-        .dots-pulse span:nth-child(2) { animation-delay: .15s; }
-        .dots-pulse span:nth-child(3) { animation-delay: .30s; }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse { 50% { transform: scale(1.3); opacity: 1; } }
-
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 4px;
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 400px) {
+            .games-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+            .game-card .emoji { font-size: 22px; }
+            .game-card .name { font-size: 10px; }
+            .header-balance .amount { font-size: 16px; }
+            .mining-plan { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .mining-plan .profit { align-self: flex-start; }
+            .active-mining .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .bottom-nav {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
     </style>
 </head>
 <body>
-<div class="wrap">
-    <header>
-        <h1>SHRLOK_ANALYZER</h1>
-        <div class="controls">
-            <label>🔍 SIZE <input id="size" type="range" min="16" max="56" value="28"></label>
-            <label>⚡ SPEED <input id="speed" type="range" min="0.4" max="2.5" step="0.1" value="1"></label>
-            <label>🎨 COLOR <input id="accent" type="color" value="#7bd88f"></label>
-            <button id="pauseBtn">⏸</button>
-        </div>
-    </header>
 
-    <div class="content" id="content">
-        <!-- Home Page -->
-        <div id="home-page">
-            <div class="stats-grid" id="stats-grid">
-                <div class="stat-card"><div class="stat-number" id="users-count">-</div><div class="stat-label">TARGETS</div></div>
-                <div class="stat-card"><div class="stat-number" id="comments-count">-</div><div class="stat-label">MESSAGES</div></div>
-                <div class="stat-card"><div class="stat-number" id="chats-count">-</div><div class="stat-label">CHATS</div></div>
-                <div class="stat-card"><div class="stat-number" id="words-count">-</div><div class="stat-label">WORDS</div></div>
-            </div>
-
-            <div class="search-box">
-                <input type="text" class="search-input" id="search-input" placeholder="user_id or @username">
-                <button class="search-btn" id="search-btn">SCAN</button>
-            </div>
-
-            <div class="menu-list">
-                <div class="menu-item" onclick="loadMyProfile()">
-                    <div class="menu-icon">👤</div>
-                    <div class="menu-text"><div class="menu-title">MY PROFILE</div><div class="menu-subtitle">self analysis</div></div>
-                    <div>></div>
-                </div>
-                <div class="menu-item" onclick="loadTopUsers()">
-                    <div class="menu-icon">🏆</div>
-                    <div class="menu-text"><div class="menu-title">TOP TARGETS</div><div class="menu-subtitle">most active</div></div>
-                    <div>></div>
-                </div>
-                <div class="menu-item" onclick="loadTopWords()">
-                    <div class="menu-icon">📊</div>
-                    <div class="menu-text"><div class="menu-title">WORD CLOUD</div><div class="menu-subtitle">frequency</div></div>
-                    <div>></div>
-                </div>
-                <div class="menu-item" onclick="loadTopChats()">
-                    <div class="menu-icon">📢</div>
-                    <div class="menu-text"><div class="menu-title">HOT CHATS</div><div class="menu-subtitle">top activity</div></div>
-                    <div>></div>
-                </div>
-                <div class="menu-item" onclick="loadWhoSearched()">
-                    <div class="menu-icon">🔍</div>
-                    <div class="menu-text"><div class="menu-title">WHO TRACKED YOU</div><div class="menu-subtitle">search history</div></div>
-                    <div>></div>
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+        <div class="header-top">
+            <div class="header-logo">
+                <div class="icon">🏎️</div>
+                <div>
+                    <h1>Гонка за деньги</h1>
+                    <span>Игровой клуб</span>
                 </div>
             </div>
-
-            <div class="warning">
-                ⚠️ YOU ARE NOW A BLACK AGENT OF SHRLOK<br>
-                PROTECT YOUR DATA & STAY UNDER RADAR
+            <div class="header-balance" onclick="goTo('balance')">
+                <div class="label">💰 БАЛАНС</div>
+                <div>
+                    <span class="amount" id="balance">0</span>
+                    <span class="currency">₽</span>
+                </div>
             </div>
         </div>
 
-        <!-- Detail Page -->
-        <div id="detail-page" class="hidden">
-            <button class="back-btn" onclick="showHome()">← BACK</button>
-            <div id="detail-content">
-                <div class="loader spinner"></div>
-                <div style="text-align:center; margin-top:16px">LOADING...</div>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="number" id="gamesPlayed">0</div>
+                <div class="label">Игр сыграно</div>
+            </div>
+            <div class="stat-item">
+                <div class="number" id="gamesWon">0</div>
+                <div class="label">Побед</div>
+            </div>
+            <div class="stat-item">
+                <div class="number" id="referrals">0</div>
+                <div class="label">Рефералов</div>
             </div>
         </div>
     </div>
 
-    <div class="tab-bar">
-        <div class="tab-item active" onclick="showHome()"><div class="tab-icon">🏠</div><div class="tab-label">HOME</div></div>
-        <div class="tab-item" onclick="loadMyProfile()"><div class="tab-icon">👤</div><div class="tab-label">PROFILE</div></div>
-        <div class="tab-item" onclick="loadTopUsers()"><div class="tab-icon">🏆</div><div class="tab-label">TOP</div></div>
-    </div>
-</div>
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main-content">
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.enableClosingConfirmation();
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('games')">
+                <span class="emoji">🎮</span> Игры
+            </button>
+            <button class="tab-btn" onclick="switchTab('mining')">
+                <span class="emoji">⛏️</span> Майнинг
+            </button>
+            <button class="tab-btn" onclick="switchTab('profile')">
+                <span class="emoji">👤</span> Профиль
+            </button>
+        </div>
 
-    // ========== CONFIG ==========
-    // ⚠️ ИЗМЕНИ НА СВОЙ IP И ПОРТ ⚠️
-    const API_URL = "http://192.168.1.100:8080/api";  // ← ЭТУ СТРОКУ НАДО ИЗМЕНИТЬ;
-    
-    let tgUser = tg.initDataUnsafe?.user || null;
-    let isPaused = false;
-
-    // ========== ROOT CSS CONTROLS ==========
-    const root = document.documentElement;
-    const sizeInput = document.getElementById('size');
-    const speedInput = document.getElementById('speed');
-    const accentInput = document.getElementById('accent');
-    const pauseBtn = document.getElementById('pauseBtn');
-
-    sizeInput.addEventListener('input', e => root.style.setProperty('--size', e.target.value + 'px'));
-    speedInput.addEventListener('input', e => root.style.setProperty('--speed', e.target.value));
-    accentInput.addEventListener('input', e => root.style.setProperty('--accent', e.target.value));
-
-    pauseBtn.addEventListener('click', () => {
-        isPaused = !isPaused;
-        document.body.style.animationPlayState = isPaused ? 'paused' : 'running';
-        document.querySelectorAll('.loader, .spinner, .dots-pulse span, .word').forEach(el => {
-            el.style.animationPlayState = isPaused ? 'paused' : 'running';
-        });
-        pauseBtn.textContent = isPaused ? '▶️' : '⏸';
-    });
-
-    root.style.setProperty('--size', sizeInput.value + 'px');
-    root.style.setProperty('--speed', speedInput.value);
-    root.style.setProperty('--accent', accentInput.value);
-
-    // ========== UI FUNCTIONS ==========
-    function showHome() {
-        document.getElementById('home-page').classList.remove('hidden');
-        document.getElementById('detail-page').classList.add('hidden');
-        document.querySelectorAll('.tab-item').forEach((tab, i) => {
-            tab.classList.toggle('active', i === 0);
-        });
-        loadStats();
-    }
-
-    function showDetail(content) {
-        document.getElementById('home-page').classList.add('hidden');
-        document.getElementById('detail-page').classList.remove('hidden');
-        document.getElementById('detail-content').innerHTML = content;
-    }
-
-    function showLoading() {
-        showDetail(`
-            <div style="text-align:center; padding:40px">
-                <div class="loader spinner"></div>
-                <div style="margin-top:16px; color:var(--muted)">[+] LOADING...</div>
+        <!-- ===== TAB: GAMES ===== -->
+        <div id="tab-games">
+            <div class="games-grid">
+                <div class="game-card" onclick="playGame('ttt')">
+                    <span class="emoji">❌</span>
+                    <div class="name">Крестики</div>
+                    <div class="coef">×2</div>
+                </div>
+                <div class="game-card" onclick="playGame('guess')">
+                    <span class="emoji">🔢</span>
+                    <div class="name">Угадай число</div>
+                    <div class="coef">×5</div>
+                </div>
+                <div class="game-card" onclick="playGame('lucky')">
+                    <span class="emoji">🍀</span>
+                    <div class="name">Лаки-кет</div>
+                    <div class="coef">×10</div>
+                </div>
+                <div class="game-card" onclick="playGame('car')">
+                    <span class="emoji">🏎️</span>
+                    <div class="name">Угадай машину</div>
+                    <div class="coef">×3</div>
+                </div>
+                <div class="game-card" onclick="playGame('bomb')">
+                    <span class="emoji">💣</span>
+                    <div class="name">Бомба</div>
+                    <div class="coef">×10+</div>
+                </div>
+                <div class="game-card" onclick="playGame('rps')">
+                    <span class="emoji">✂️</span>
+                    <div class="name">КНБ</div>
+                    <div class="coef">×2</div>
+                </div>
+                <div class="game-card" onclick="playGame('roulette')">
+                    <span class="emoji">🎰</span>
+                    <div class="name">Рулетка</div>
+                    <div class="coef">×14</div>
+                </div>
+                <div class="game-card" onclick="playGame('slots')">
+                    <span class="emoji">🎰</span>
+                    <div class="name">Слоты</div>
+                    <div class="coef">×10</div>
+                </div>
+                <div class="game-card" onclick="playGame('wheel')">
+                    <span class="emoji">🎡</span>
+                    <div class="name">Колесо</div>
+                    <div class="coef">×14</div>
+                </div>
             </div>
-        `);
-    }
 
-    // ========== API CALLS ==========
-    async function loadStats() {
-        try {
-            const response = await fetch(`${API_URL}/stats`);
-            const data = await response.json();
-            document.getElementById('users-count').innerText = data.users || 0;
-            document.getElementById('comments-count').innerText = data.comments || 0;
-            document.getElementById('chats-count').innerText = data.chats || 0;
-            document.getElementById('words-count').innerText = data.words || 0;
-        } catch(e) {
-            document.getElementById('users-count').innerText = 'ERR';
-        }
-    }
-
-    async function loadMyProfile() {
-        if (!tgUser) {
-            showDetail('<div class="loading">❌ ACCESS DENIED<br>No user data</div>');
-            return;
-        }
-        showLoading();
-        try {
-            const response = await fetch(`${API_URL}/user/${tgUser.id}`);
-            const user = await response.json();
-            if (user.error) {
-                showDetail('<div class="loading">❌ PROFILE NOT FOUND</div>');
-                return;
-            }
-            showDetail(`
-                <div class="user-card">
-                    <div class="user-name">> ${user.first_name || 'ANON'}</div>
-                    ${user.username ? `<div class="user-username">@${user.username}</div>` : ''}
-                    <div class="user-username">ID: ${user.user_id}</div>
+            <div class="menu-grid">
+                <div class="menu-item" onclick="switchTab('mining')">
+                    <span class="emoji">⛏️</span>
+                    <div class="name">Ферма майнинг</div>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-number">${user.total_messages || 0}</div><div class="stat-label">MSG</div></div>
-                    <div class="stat-card"><div class="stat-number">${user.chats_count || 0}</div><div class="stat-label">CHATS</div></div>
-                    <div class="stat-card"><div class="stat-number">${user.friends_count || 0}</div><div class="stat-label">CONTACTS</div></div>
-                    <div class="stat-card"><div class="stat-number">${user.bots_count || 0}</div><div class="stat-label">BOTS</div></div>
+                <div class="menu-item" onclick="switchTab('profile')">
+                    <span class="emoji">👤</span>
+                    <div class="name">Мой профиль</div>
                 </div>
-                ${user.first_seen ? `<div class="stat-card"><div>📅 FIRST SEEN: ${user.first_seen.slice(0,10)}</div></div>` : ''}
-                ${user.favorite_chat ? `<div class="stat-card"><div>⭐ TOP CHAT: ${user.favorite_chat}</div></div>` : ''}
-            `);
-        } catch(e) {
-            showDetail('<div class="loading">❌ CONNECTION ERROR</div>');
-        }
-    }
+                <div class="menu-item" onclick="goTo('referral')">
+                    <span class="emoji">🔗</span>
+                    <div class="name">Рефералы</div>
+                </div>
+                <div class="menu-item" onclick="goTo('settings')">
+                    <span class="emoji">⚙️</span>
+                    <div class="name">Настройки</div>
+                </div>
+            </div>
+        </div>
 
-    async function loadTopUsers() {
-        showLoading();
-        try {
-            const response = await fetch(`${API_URL}/top/users`);
-            const users = await response.json();
-            showDetail(`
-                <h3>> TOP ACTIVE USERS</h3>
-                ${users.map((user, i) => `
-                    <div class="user-card" style="cursor:pointer" onclick="searchUserById(${user.user_id})">
-                        <div class="user-name">${String(i+1).padStart(2,'0')}. ${user.first_name || 'ANON'}</div>
-                        ${user.username ? `<div class="user-username">@${user.username}</div>` : ''}
-                        <div class="user-username">💬 ${user.total_messages} messages</div>
+        <!-- ===== TAB: MINING ===== -->
+        <div id="tab-mining" style="display:none;">
+            
+            <!-- Mining Header with Logo -->
+            <div class="mining-logo">
+                <div class="icon">⛏️</div>
+                <div class="text">
+                    <div class="name">🚀 Ферма майнинга</div>
+                    <div class="desc">Пассивный доход 24/7</div>
+                </div>
+                <div style="font-size:28px;">⚡</div>
+            </div>
+
+            <!-- Mining Stats -->
+            <div class="mining-header">
+                <div class="title">
+                    <span>📊</span> Доходность фермы
+                </div>
+                <div class="subtitle">Инвестируй и получай прибыль ежедневно</div>
+                
+                <div class="mining-stats">
+                    <div class="mining-stat">
+                        <div class="value" id="totalInvested">0 ₽</div>
+                        <div class="label">Всего инвестировано</div>
                     </div>
-                `).join('')}
-            `);
-        } catch(e) {
-            showDetail('<div class="loading">❌ LOAD ERROR</div>');
-        }
-    }
-
-    async function loadTopWords() {
-        showLoading();
-        try {
-            const response = await fetch(`${API_URL}/top/words`);
-            const words = await response.json();
-            showDetail(`
-                <h3>> FREQUENCY ANALYSIS</h3>
-                <div class="word-cloud">
-                    ${words.map(w => `<div class="word" style="font-size: ${Math.min(20, 10 + Math.sqrt(w.frequency))}px">${w.word}</div>`).join('')}
-                </div>
-            `);
-        } catch(e) {
-            showDetail('<div class="loading">❌ ANALYZE ERROR</div>');
-        }
-    }
-
-    async function loadTopChats() {
-        showLoading();
-        try {
-            const response = await fetch(`${API_URL}/top/chats`);
-            const chats = await response.json();
-            showDetail(`
-                <h3>> HOT CHATS BY ACTIVITY</h3>
-                ${chats.map((chat, i) => `
-                    <div class="user-card">
-                        <div class="user-name">${String(i+1).padStart(2,'0')}. ${chat.chat_title}</div>
-                        <div class="user-username">💬 ${chat.message_count} messages</div>
+                    <div class="mining-stat">
+                        <div class="value" id="totalProfit">0 ₽</div>
+                        <div class="label">Всего прибыли</div>
                     </div>
-                `).join('')}
-            `);
-        } catch(e) {
-            showDetail('<div class="loading">❌ SCAN ERROR</div>');
-        }
-    }
+                </div>
+            </div>
 
-    async function loadWhoSearched() {
-        if (!tgUser) {
-            showDetail('<div class="loading">❌ ACCESS DENIED</div>');
-            return;
-        }
-        showLoading();
-        try {
-            const response = await fetch(`${API_URL}/who-searched/${tgUser.id}`);
-            const searchers = await response.json();
-            if (searchers.length === 0) {
-                showDetail('<div class="loading">[!] NO TRACKING HISTORY</div>');
-                return;
-            }
-            showDetail(`
-                <h3>> WHO SEARCHED YOU</h3>
-                ${searchers.map(s => `
-                    <div class="user-card">
-                        <div class="user-name">${s.searcher_name}</div>
-                        <div class="user-username">📅 ${s.search_date.slice(0,10)}</div>
+            <!-- Active Mining -->
+            <div class="active-mining" id="activeMining">
+                <div class="header">
+                    <div class="title">⚡ Активные майнинги</div>
+                    <div class="status" id="activeCount">0 активных</div>
+                </div>
+                <div id="activeMiningContent">
+                    <div class="text-muted" style="text-align:center; padding:10px;">
+                        Нет активных майнингов
                     </div>
-                `).join('')}
-            `);
-        } catch(e) {
-            showDetail('<div class="loading">❌ TRACK ERROR</div>');
-        }
-    }
+                </div>
+            </div>
 
-    async function searchUserById(userId) {
-        showLoading();
+            <!-- Mining Plans -->
+            <div class="section-title">📦 Доступные тарифы</div>
+            <div class="mining-plans" id="miningPlans">
+                <div class="mining-plan" onclick="startMining(100, 24, 50)">
+                    <div class="info">
+                        <div class="amount">💰 100 ₽</div>
+                        <div class="details">
+                            <span>⏱️ 24ч</span>
+                            <span>📈 50%</span>
+                        </div>
+                    </div>
+                    <div class="profit high">+50%</div>
+                </div>
+                <div class="mining-plan" onclick="startMining(250, 24, 40)">
+                    <div class="info">
+                        <div class="amount">💰 250 ₽</div>
+                        <div class="details">
+                            <span>⏱️ 24ч</span>
+                            <span>📈 40%</span>
+                        </div>
+                    </div>
+                    <div class="profit high">+40%</div>
+                </div>
+                <div class="mining-plan" onclick="startMining(500, 72, 25)">
+                    <div class="info">
+                        <div class="amount">💰 500 ₽</div>
+                        <div class="details">
+                            <span>⏱️ 3дн</span>
+                            <span>📈 25%</span>
+                        </div>
+                    </div>
+                    <div class="profit">+25%</div>
+                </div>
+                <div class="mining-plan" onclick="startMining(1000, 168, 15)">
+                    <div class="info">
+                        <div class="amount">💰 1000 ₽</div>
+                        <div class="details">
+                            <span>⏱️ 7дн</span>
+                            <span>📈 15%</span>
+                        </div>
+                    </div>
+                    <div class="profit">+15%</div>
+                </div>
+                <div class="mining-plan" onclick="startMining(5000, 240, 10)">
+                    <div class="info">
+                        <div class="amount">💰 5000 ₽</div>
+                        <div class="details">
+                            <span>⏱️ 10дн</span>
+                            <span>📈 10%</span>
+                        </div>
+                    </div>
+                    <div class="profit">+10%</div>
+                </div>
+            </div>
+
+            <!-- Completed Mining -->
+            <div class="completed-mining">
+                <div class="title">✅ Завершенные майнинги</div>
+                <div id="completedMiningContent">
+                    <div class="text-muted" style="text-align:center; padding:10px;">
+                        Нет завершенных майнингов
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: PROFILE ===== -->
+        <div id="tab-profile" style="display:none;">
+            <div class="section-title">👤 Мой профиль</div>
+
+            <div class="profile-card">
+                <div class="profile-item">
+                    <span class="label">🆔 ID</span>
+                    <span class="value" id="userId">—</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">💰 Баланс</span>
+                    <span class="value" id="profileBalance">0 ₽</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">📈 Заработано</span>
+                    <span class="value" id="earned">0 ₽</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">⛏️ Доход с майнинга</span>
+                    <span class="value" id="miningIncome">0 ₽</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">💳 Пополнено</span>
+                    <span class="value" id="deposited">0 ₽</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">💸 Выведено</span>
+                    <span class="value" id="withdrawn">0 ₽</span>
+                </div>
+                <div class="profile-item">
+                    <span class="label">🔗 Рефералов</span>
+                    <span class="value" id="profileReferrals">0</span>
+                </div>
+            </div>
+
+            <div class="btn-grid">
+                <button class="btn-primary" onclick="goTo('deposit')">💳 Пополнить</button>
+                <button class="btn-gold" onclick="getDailyBonus()">🎁 Бонус</button>
+            </div>
+        </div>
+
+        <!-- Bottom padding for nav -->
+        <div style="height:80px;"></div>
+    </div>
+
+    <!-- ===== BOTTOM NAV ===== -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('games')">
+            <span class="emoji">🎮</span> Игры
+        </button>
+        <button class="nav-item" onclick="switchTab('mining')">
+            <span class="emoji">⛏️</span> Майнинг
+        </button>
+        <button class="nav-item" onclick="switchTab('profile')">
+            <span class="emoji">👤</span> Профиль
+        </button>
+        <button class="nav-item" onclick="goTo('referral')">
+            <span class="emoji">🔗</span> Рефералы
+        </button>
+    </div>
+
+    <!-- ===== TELEGRAM WEB APP ===== -->
+    <script>
+        let tg = null;
+        let currentTab = 'games';
+
         try {
-            const response = await fetch(`${API_URL}/user/${userId}`);
-            const user = await response.json();
-            if (user.error) {
-                showDetail('<div class="loading">❌ TARGET NOT FOUND</div>');
-                return;
-            }
-            showDetail(`
-                <div class="user-card">
-                    <div class="user-name">> ${user.first_name || 'ANON'}</div>
-                    ${user.username ? `<div class="user-username">@${user.username}</div>` : ''}
-                    <div class="user-username">ID: ${user.user_id}</div>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-number">${user.total_messages || 0}</div><div class="stat-label">MSG</div></div>
-                    <div class="stat-card"><div class="stat-number">${user.chats_count || 0}</div><div class="stat-label">CHATS</div></div>
-                    <div class="stat-card"><div class="stat-number">${user.friends_count || 0}</div><div class="stat-label">CONTACTS</div></div>
-                    <div class="stat-card"><div class="stat-number">${user.bots_count || 0}</div><div class="stat-label">BOTS</div></div>
-                </div>
-                ${user.first_seen ? `<div class="stat-card"><div>📅 FIRST SEEN: ${user.first_seen.slice(0,10)}</div></div>` : ''}
-            `);
+            tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
         } catch(e) {
-            showDetail('<div class="loading">❌ SEARCH ERROR</div>');
+            console.log('Not in Telegram WebApp');
         }
-    }
 
-    async function searchUser() {
-        const query = document.getElementById('search-input').value.trim();
-        if (!query) return;
-        if (query.match(/^\d+$/)) {
-            await searchUserById(parseInt(query));
-        } else {
-            showDetail('<div class="loading">❌ Use numeric ID only</div>');
+        // ===== FUNCTIONS =====
+        function sendToBot(data) {
+            if (tg) {
+                tg.sendData(JSON.stringify(data));
+                tg.close();
+            } else {
+                alert('Открыто в браузере! Откройте через Telegram бота: @goncamoney_bot');
+                console.log('Send to bot:', data);
+            }
         }
-    }
 
-    document.getElementById('search-btn').onclick = searchUser;
-    document.getElementById('search-input').onkeypress = (e) => {
-        if (e.key === 'Enter') searchUser();
-    };
+        function playGame(game) {
+            sendToBot({ action: 'game', game: game });
+        }
 
-    loadStats();
-    tg.ready();
-</script>
+        function goTo(page) {
+            sendToBot({ action: 'navigate', page: page });
+        }
+
+        function getDailyBonus() {
+            sendToBot({ action: 'daily_bonus' });
+        }
+
+        function startMining(amount, hours, percent) {
+            sendToBot({ 
+                action: 'start_mining', 
+                amount: amount, 
+                hours: hours, 
+                percent: percent 
+            });
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-games').style.display = 'none';
+            document.getElementById('tab-mining').style.display = 'none';
+            document.getElementById('tab-profile').style.display = 'none';
+
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+
+            if (tab === 'games') {
+                document.getElementById('tab-games').style.display = 'block';
+                document.querySelector('.tab-btn[onclick*="games"]').classList.add('active');
+                document.querySelector('.nav-item[onclick*="games"]').classList.add('active');
+            } else if (tab === 'mining') {
+                document.getElementById('tab-mining').style.display = 'block';
+                document.querySelector('.tab-btn[onclick*="mining"]').classList.add('active');
+                document.querySelector('.nav-item[onclick*="mining"]').classList.add('active');
+            } else if (tab === 'profile') {
+                document.getElementById('tab-profile').style.display = 'block';
+                document.querySelector('.tab-btn[onclick*="profile"]').classList.add('active');
+                document.querySelector('.nav-item[onclick*="profile"]').classList.add('active');
+            }
+        }
+
+        // ===== UPDATE DATA =====
+        function updateBalance(amount) {
+            document.getElementById('balance').textContent = amount;
+            document.getElementById('profileBalance').textContent = amount + ' ₽';
+        }
+
+        function updateStats(played, won, referrals) {
+            document.getElementById('gamesPlayed').textContent = played || 0;
+            document.getElementById('gamesWon').textContent = won || 0;
+            document.getElementById('referrals').textContent = referrals || 0;
+            document.getElementById('profileReferrals').textContent = referrals || 0;
+        }
+
+        function updateProfile(data) {
+            if (data.userId) document.getElementById('userId').textContent = data.userId;
+            if (data.earned) document.getElementById('earned').textContent = data.earned + ' ₽';
+            if (data.miningIncome) document.getElementById('miningIncome').textContent = data.miningIncome + ' ₽';
+            if (data.deposited) document.getElementById('deposited').textContent = data.deposited + ' ₽';
+            if (data.withdrawn) document.getElementById('withdrawn').textContent = data.withdrawn + ' ₽';
+        }
+
+        function updateMining(data) {
+            if (data.totalInvested) document.getElementById('totalInvested').textContent = data.totalInvested + ' ₽';
+            if (data.totalProfit) document.getElementById('totalProfit').textContent = data.totalProfit + ' ₽';
+            if (data.activeCount) document.getElementById('activeCount').textContent = data.activeCount + ' активных';
+
+            const activeContent = document.getElementById('activeMiningContent');
+            if (data.active && data.active.length > 0) {
+                let html = '';
+                data.active.forEach(item => {
+                    const progress = item.progress || 0;
+                    const earned = item.earned || 0;
+                    html += `
+                        <div style="margin-bottom:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <span style="font-weight:600;">💰 ${item.amount} ₽</span>
+                                    <span style="font-size:11px; color:var(--text-secondary); margin-left:8px;">${item.percent}%</span>
+                                </div>
+                                <span style="font-size:12px; color:var(--text-secondary);">${item.remaining}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="fill" style="width:${progress}%;"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary);">
+                                <span>Доход: +${earned} ₽</span>
+                                <span>${item.progress || 0}%</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                activeContent.innerHTML = html;
+            } else {
+                activeContent.innerHTML = `<div class="text-muted" style="text-align:center; padding:10px;">Нет активных майнингов</div>`;
+            }
+
+            const completedContent = document.getElementById('completedMiningContent');
+            if (data.completed && data.completed.length > 0) {
+                let html = '';
+                data.completed.slice(-5).forEach(item => {
+                    html += `
+                        <div class="completed-item">
+                            <div class="info">
+                                <div class="amount">💰 ${item.amount} ₽</div>
+                                <div class="details">${item.percent}% · ${item.hours}ч</div>
+                            </div>
+                            <div class="earned">+${item.earned || 0} ₽</div>
+                        </div>
+                    `;
+                });
+                completedContent.innerHTML = html;
+            } else {
+                completedContent.innerHTML = `<div class="text-muted" style="text-align:center; padding:10px;">Нет завершенных майнингов</div>`;
+            }
+        }
+
+        // ===== RECEIVE DATA FROM BOT =====
+        window.addEventListener('message', function(e) {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === 'update') {
+                    if (data.balance !== undefined) updateBalance(data.balance);
+                    if (data.played !== undefined) updateStats(data.played, data.won, data.referrals);
+                    if (data.profile) updateProfile(data.profile);
+                    if (data.mining) updateMining(data.mining);
+                }
+            } catch(e) {}
+        });
+
+        // ===== INIT =====
+        console.log('🏎️ Гонка за деньги - Web App загружен');
+    </script>
 </body>
 </html>

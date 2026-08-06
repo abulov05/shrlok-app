@@ -319,6 +319,7 @@
             color: var(--text-primary);
         }
 
+        /* Mining Plans */
         .mining-plans {
             display: flex;
             flex-direction: column;
@@ -382,6 +383,7 @@
             color: var(--gold);
         }
 
+        /* Active Mining */
         .active-mining {
             background: var(--bg-card);
             border-radius: 14px;
@@ -454,6 +456,7 @@
             color: var(--text-secondary);
         }
 
+        /* Completed Mining */
         .completed-mining {
             background: var(--bg-card);
             border-radius: 14px;
@@ -494,6 +497,7 @@
             font-weight: 600;
         }
 
+        /* Mining Logo */
         .mining-logo {
             display: flex;
             align-items: center;
@@ -530,6 +534,7 @@
             color: var(--text-secondary);
         }
 
+        /* Referral Section */
         .referral-box {
             background: var(--bg-card);
             border-radius: 14px;
@@ -616,6 +621,7 @@
             color: var(--text-secondary);
         }
 
+        /* Profile */
         .profile-card {
             background: var(--bg-card);
             border-radius: 14px;
@@ -683,6 +689,7 @@
             margin-top: 16px;
         }
 
+        /* ===== BOTTOM NAV ===== */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -722,6 +729,7 @@
             color: var(--primary);
         }
 
+        /* ===== UTILITY ===== */
         .mt-10 { margin-top: 10px; }
         .mt-20 { margin-top: 20px; }
         .mb-20 { margin-bottom: 20px; }
@@ -729,35 +737,7 @@
         .text-muted { color: var(--text-secondary); }
         .hidden { display: none; }
 
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg-card);
-            border: 1px solid var(--primary);
-            padding: 12px 20px;
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-size: 14px;
-            z-index: 1000;
-            display: none;
-            max-width: 90%;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-        }
-
-        .toast.show {
-            display: block;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
-        }
-
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 400px) {
             .games-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -779,9 +759,6 @@
 </head>
 <body>
 
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
-
     <!-- ===== HEADER ===== -->
     <div class="header">
         <div class="header-top">
@@ -792,7 +769,7 @@
                     <span>Игровой клуб</span>
                 </div>
             </div>
-            <div class="header-balance" onclick="getBalance()">
+            <div class="header-balance" onclick="goTo('balance')">
                 <div class="label">💰 БАЛАНС</div>
                 <div>
                     <span class="amount" id="balance">0</span>
@@ -906,6 +883,7 @@
         <!-- ===== TAB: MINING ===== -->
         <div id="tab-mining" style="display:none;">
             
+            <!-- Mining Header with Logo -->
             <div class="mining-logo">
                 <div class="icon">⛏️</div>
                 <div class="text">
@@ -915,6 +893,7 @@
                 <div style="font-size:28px;">⚡</div>
             </div>
 
+            <!-- Mining Stats -->
             <div class="mining-header">
                 <div class="title">
                     <span>📊</span> Доходность фермы
@@ -933,6 +912,7 @@
                 </div>
             </div>
 
+            <!-- Active Mining -->
             <div class="active-mining" id="activeMining">
                 <div class="header">
                     <div class="title">⚡ Активные майнинги</div>
@@ -945,6 +925,7 @@
                 </div>
             </div>
 
+            <!-- Mining Plans -->
             <div class="section-title">📦 Доступные тарифы</div>
             <div class="mining-plans" id="miningPlans">
                 <div class="mining-plan" onclick="startMining(100, 24, 50)">
@@ -999,6 +980,7 @@
                 </div>
             </div>
 
+            <!-- Completed Mining -->
             <div class="completed-mining">
                 <div class="title">✅ Завершенные майнинги</div>
                 <div id="completedMiningContent">
@@ -1050,6 +1032,7 @@
             </div>
         </div>
 
+        <!-- Bottom padding for nav -->
         <div style="height:80px;"></div>
     </div>
 
@@ -1073,74 +1056,98 @@
     <script>
         let tg = null;
         let currentTab = 'games';
+        let userId = null;
 
         try {
             tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
+            userId = tg.initDataUnsafe?.user?.id || null;
         } catch(e) {
             console.log('Not in Telegram WebApp');
         }
 
-        // ===== TOAST =====
-        function showToast(message, duration = 3000) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            clearTimeout(toast._timeout);
-            toast._timeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, duration);
+        if (!userId) {
+            userId = new URLSearchParams(window.location.search).get('user_id') || '123456';
+        }
+
+        // API_BASE может быть передан через URL параметр api_base
+        const urlParams = new URLSearchParams(window.location.search);
+        const apiBaseFromUrl = urlParams.get('api_base');
+        const API_BASE = apiBaseFromUrl || window.location.origin;
+        
+        // Try Telegram WebApp init data
+        if (tg && tg.initDataUnsafe) {
+            console.log('WebApp init data:', tg.initDataUnsafe);
+        }
+
+        // ===== API HELPERS =====
+        async function apiGet(path) {
+            const url = new URL(path, API_BASE);
+            url.searchParams.set('user_id', userId);
+            const res = await fetch(url.toString());
+            if (!res.ok) throw new Error('API error');
+            return res.json();
+        }
+
+        async function apiPost(path, data) {
+            const res = await fetch(path, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({user_id: userId, ...data})
+            });
+            if (!res.ok) throw new Error('API error');
+            return res.json();
         }
 
         // ===== FUNCTIONS =====
         function sendToBot(data) {
             if (tg) {
-                try {
-                    tg.sendData(JSON.stringify(data));
-                    // ⚠️ НЕ ЗАКРЫВАЕМ ПРИЛОЖЕНИЕ!
-                    // tg.close();  // УДАЛИТЬ ЭТУ СТРОКУ!
-                    showToast('✅ Отправлено в бота');
-                } catch(e) {
-                    showToast('❌ Ошибка: ' + e.message);
-                }
+                tg.sendData(JSON.stringify(data));
+                tg.close();
             } else {
-                showToast('⚠️ Откройте через Telegram бота');
+                alert('Открыто в браузере! Откройте через Telegram бота: @goncamoney_bot');
                 console.log('Send to bot:', data);
             }
         }
 
-        function playGame(game) {
-            sendToBot({ action: 'game', game: game });
-            showToast('🎮 Запуск игры ' + game);
+        async function playGame(game) {
+            try {
+                await apiPost('/api/game/start', {game, bet: 3});
+                switchTab('game');
+                document.getElementById('game-title').textContent = gameNames[game] || game;
+                if (game === 'ttt') renderTTT();
+                else if (game === 'guess') renderGuess();
+                else if (game === 'rps') renderRPS();
+                else if (game === 'roulette') renderRoulette();
+                else if (game === 'slots') renderSlots();
+                else if (game === 'mines') renderMines();
+                else if (game === 'wheel') renderWheel();
+                else if (game === 'hl') renderHigherLower();
+                else if (game === 'hangman') renderHangman();
+            } catch (e) {
+                console.error('Failed to start game:', e);
+                alert('Ошибка запуска игры');
+            }
         }
 
         function goTo(page) {
             sendToBot({ action: 'navigate', page: page });
-            showToast('📍 Переход на ' + page);
         }
 
-        function getBalance() {
-            sendToBot({ action: 'get_balance' });
-        }
-
-        function getDailyBonus() {
+        async function getDailyBonus() {
             sendToBot({ action: 'daily_bonus' });
-            showToast('🎁 Запрос бонуса отправлен');
         }
 
-        function startMining(amount, hours, percent) {
-            sendToBot({ 
-                action: 'start_mining', 
-                amount: amount, 
-                hours: hours, 
-                percent: percent 
-            });
-            showToast('⛏️ Запуск майнинга на ' + amount + ' ₽');
-        }
-
-        function getFullData() {
-            sendToBot({ action: 'get_full_data' });
+        async function startMining(amount, hours, percent) {
+            try {
+                await apiPost('/api/mining/start', {amount, hours, percent});
+                alert('Майнинг запущен!');
+                loadMining();
+            } catch (e) {
+                console.error('Failed to start mining:', e);
+                alert('Ошибка запуска майнинга');
+            }
         }
 
         function switchTab(tab) {
@@ -1149,6 +1156,7 @@
             document.getElementById('tab-games').style.display = 'none';
             document.getElementById('tab-mining').style.display = 'none';
             document.getElementById('tab-profile').style.display = 'none';
+            document.getElementById('game-section').style.display = 'none';
 
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
 
@@ -1160,120 +1168,242 @@
                 document.getElementById('tab-mining').style.display = 'block';
                 document.querySelector('.tab-btn[onclick*="mining"]').classList.add('active');
                 document.querySelector('.nav-item[onclick*="mining"]').classList.add('active');
-                // Обновляем данные майнинга при переходе
-                getFullData();
+                loadMining();
             } else if (tab === 'profile') {
                 document.getElementById('tab-profile').style.display = 'block';
                 document.querySelector('.tab-btn[onclick*="profile"]').classList.add('active');
                 document.querySelector('.nav-item[onclick*="profile"]').classList.add('active');
-                // Обновляем данные профиля при переходе
-                getFullData();
+                loadProfile();
+            } else if (tab === 'game') {
+                document.getElementById('game-section').style.display = 'block';
             }
         }
 
-        // ===== UPDATE DATA =====
-        function updateBalance(amount) {
-            document.getElementById('balance').textContent = amount;
-            document.getElementById('profileBalance').textContent = amount + ' ₽';
+        // ===== LOAD DATA =====
+        async function loadBalance() {
+            try {
+                const data = await apiGet('/api/balance');
+                document.getElementById('balance').textContent = data.balance + ' ₽';
+            } catch (e) {
+                console.error('Failed to load balance:', e);
+            }
         }
 
-        function updateStats(played, won, referrals) {
-            document.getElementById('gamesPlayed').textContent = played || 0;
-            document.getElementById('gamesWon').textContent = won || 0;
-            document.getElementById('referrals').textContent = referrals || 0;
-            document.getElementById('profileReferrals').textContent = referrals || 0;
+        async function loadProfile() {
+            try {
+                const data = await apiGet('/api/profile');
+                document.getElementById('profileBalance').textContent = data.rub_balance + ' ₽';
+                document.getElementById('gamesPlayed').textContent = data.games_played || 0;
+                document.getElementById('gamesWon').textContent = data.games_won || 0;
+            } catch (e) {
+                console.error('Failed to load profile:', e);
+            }
         }
 
-        function updateProfile(data) {
-            if (data.userId) document.getElementById('userId').textContent = data.userId;
-            if (data.earned) document.getElementById('earned').textContent = data.earned + ' ₽';
-            if (data.miningIncome) document.getElementById('miningIncome').textContent = data.miningIncome + ' ₽';
-            if (data.deposited) document.getElementById('deposited').textContent = data.deposited + ' ₽';
-            if (data.withdrawn) document.getElementById('withdrawn').textContent = data.withdrawn + ' ₽';
+        async function loadMining() {
+            try {
+                const data = await apiGet('/api/mining/status');
+                console.log('Mining data:', data);
+            } catch (e) {
+                console.error('Failed to load mining:', e);
+            }
         }
 
-        function updateMining(data) {
-            if (data.totalInvested) document.getElementById('totalInvested').textContent = data.totalInvested + ' ₽';
-            if (data.totalProfit) document.getElementById('totalProfit').textContent = data.totalProfit + ' ₽';
-            if (data.activeCount !== undefined) document.getElementById('activeCount').textContent = data.activeCount + ' активных';
+        // ===== GAMES =====
+        const gameNames = {
+            ttt: 'Крестики-нолики',
+            guess: 'Угадай число',
+            lucky: 'Лаки-кет',
+            car: 'Угадай машину',
+            bomb: 'Бомба',
+            rps: 'Камень-ножницы-бумага',
+            roulette: 'Рулетка',
+            slots: 'Слоты',
+            wheel: 'Колесо Фортуны',
+            hl: 'Больше/Меньше',
+            hangman: 'Виселица'
+        };
 
-            const activeContent = document.getElementById('activeMiningContent');
-            if (data.active && data.active.length > 0) {
-                let html = '';
-                data.active.forEach(item => {
-                    const progress = item.progress || 0;
-                    const earned = item.earned || 0;
-                    html += `
-                        <div style="margin-bottom:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <span style="font-weight:600;">💰 ${item.amount} ₽</span>
-                                    <span style="font-size:11px; color:var(--text-secondary); margin-left:8px;">${item.percent}%</span>
-                                </div>
-                                <span style="font-size:12px; color:var(--text-secondary);">${item.remaining}</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="fill" style="width:${progress}%;"></div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary);">
-                                <span>Доход: +${earned} ₽</span>
-                                <span>${item.progress || 0}%</span>
-                            </div>
+        function renderTTT() {
+            document.getElementById('game-content').innerHTML = `
+                <div class="game-grid" id="ttt-grid"></div>
+            `;
+            const grid = document.getElementById('ttt-grid');
+            for (let i = 0; i < 9; i++) {
+                const div = document.createElement('div');
+                div.className = 'game-cell';
+                div.textContent = '';
+                div.onclick = async () => {
+                    await makeMove('ttt', {position: i});
+                    div.textContent = 'X';
+                    div.classList.add('x');
+                };
+                grid.appendChild(div);
+            }
+        }
+
+        function renderGuess() {
+            document.getElementById('game-content').innerHTML = `
+                <input type="number" id="guess-input" placeholder="1-100" style="width: 100%; padding: 15px; font-size: 18px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff; margin-bottom: 10px;">
+                <button class="back-btn" onclick="makeGuess()">Угадать</button>
+            `;
+        }
+
+        async function makeGuess() {
+            const num = parseInt(document.getElementById('guess-input').value);
+            if (!num) return;
+            await makeMove('guess', {number: num});
+        }
+
+        function renderRPS() {
+            document.getElementById('game-content').innerHTML = `
+                <div class="menu-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="menu-item" onclick="playRPS('rock')">
+                        <div class="icon">🪨</div>
+                        <div class="title">Камень</div>
+                    </div>
+                    <div class="menu-item" onclick="playRPS('scissors')">
+                        <div class="icon">✂️</div>
+                        <div class="title">Ножницы</div>
+                    </div>
+                    <div class="menu-item" onclick="playRPS('paper')">
+                        <div class="icon">📄</div>
+                        <div class="title">Бумага</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function playRPS(choice) {
+            await makeMove('rps', {choice});
+            alert('Выбор: ' + choice);
+        }
+
+        function renderRoulette() {
+            document.getElementById('game-content').innerHTML = `
+                <div class="menu-grid" style="grid-template-columns: 1fr;">
+                    <div class="menu-item" onclick="playRoulette('red')">
+                        <div class="icon">🔴</div>
+                        <div class="title">Красное (x2)</div>
+                    </div>
+                    <div class="menu-item" onclick="playRoulette('black')">
+                        <div class="icon">⚫</div>
+                        <div class="title">Чёрное (x2)</div>
+                    </div>
+                    <div class="menu-item" onclick="playRoulette('green')">
+                        <div class="icon">🟢</div>
+                        <div class="title">Зелёное (x14)</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function playRoulette(color) {
+            await makeMove('roulette', {color});
+            alert('Ставка на: ' + color);
+        }
+
+        function renderSlots() {
+            document.getElementById('game-content').innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 80px; margin-bottom: 20px;">🎰</div>
+                    <button class="back-btn" onclick="playSlots()">Крутить</button>
+                </div>
+            `;
+        }
+
+        async function playSlots() {
+            await makeMove('slots', {spin: true});
+            alert('Крутим слоты...');
+        }
+
+        function renderMines() {
+            let html = '<div class="game-grid">';
+            for (let i = 0; i < 25; i++) {
+                html += `<div class="game-cell" onclick="openMine(${i})">⬜</div>`;
+            }
+            html += '</div>';
+            document.getElementById('game-content').innerHTML = html;
+        }
+
+        async function openMine(index) {
+            await makeMove('mines', {index});
+        }
+
+        function renderWheel() {
+            document.getElementById('game-content').innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 80px; margin-bottom: 20px;">🎡</div>
+                    <button class="back-btn" onclick="playWheel()">Крутить</button>
+                </div>
+            `;
+        }
+
+        async function playWheel() {
+            await makeMove('wheel', {spin: true});
+            alert('Крутим колесо...');
+        }
+
+        function renderHigherLower() {
+            document.getElementById('game-content').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 60px; margin-bottom: 20px;">📈</div>
+                    <div class="menu-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="menu-item" onclick="playHL('higher')">
+                            <div class="icon">📈</div>
+                            <div class="title">Больше</div>
                         </div>
-                    `;
-                });
-                activeContent.innerHTML = html;
-            } else {
-                activeContent.innerHTML = `<div class="text-muted" style="text-align:center; padding:10px;">Нет активных майнингов</div>`;
-            }
-
-            const completedContent = document.getElementById('completedMiningContent');
-            if (data.completed && data.completed.length > 0) {
-                let html = '';
-                data.completed.slice(-5).forEach(item => {
-                    html += `
-                        <div class="completed-item">
-                            <div class="info">
-                                <div class="amount">💰 ${item.amount} ₽</div>
-                                <div class="details">${item.percent}% · ${item.hours}ч</div>
-                            </div>
-                            <div class="earned">+${item.earned || 0} ₽</div>
+                        <div class="menu-item" onclick="playHL('lower')">
+                            <div class="icon">📉</div>
+                            <div class="title">Меньше</div>
                         </div>
-                    `;
-                });
-                completedContent.innerHTML = html;
-            } else {
-                completedContent.innerHTML = `<div class="text-muted" style="text-align:center; padding:10px;">Нет завершенных майнингов</div>`;
-            }
+                    </div>
+                </div>
+            `;
         }
 
-        // ===== RECEIVE DATA FROM BOT =====
-        // Бот отправляет обновления как JSON в сообщениях
-        // Мы их перехватываем через Telegram.WebApp.onEvent
-        if (tg) {
-            tg.onEvent('message', function(message) {
-                try {
-                    const data = JSON.parse(message);
-                    if (data.type === 'update') {
-                        if (data.balance !== undefined) updateBalance(data.balance);
-                        if (data.played !== undefined) updateStats(data.played, data.won, data.referrals);
-                        if (data.profile) updateProfile(data.profile);
-                        if (data.mining) updateMining(data.mining);
-                        showToast('🔄 Данные обновлены');
-                    }
-                } catch(e) {
-                    // Это обычное сообщение, не JSON
-                }
-            });
+        async function playHL(direction) {
+            await makeMove('hl', {direction});
+        }
+
+        function renderHangman() {
+            document.getElementById('game-content').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 60px; margin-bottom: 20px;">💀</div>
+                    <div id="hangman-word" style="font-size: 24px; letter-spacing: 8px; margin-bottom: 20px;">_ _ _ _ _</div>
+                    <div id="hangman-keyboard"></div>
+                </div>
+            `;
+            renderHangmanKeyboard();
+        }
+
+        function renderHangmanKeyboard() {
+            const letters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
+            const keyboard = document.getElementById('hangman-keyboard');
+            if (!keyboard) return;
+            let html = '<div class="menu-grid" style="grid-template-columns: repeat(7, 1fr);">';
+            for (let ch of letters) {
+                html += `<div class="menu-item" onclick="playHangman('${ch}')" style="padding:10px;"><div class="name">${ch.toUpperCase()}</div></div>`;
+            }
+            html += '</div>';
+            keyboard.innerHTML = html;
+        }
+
+        async function playHangman(letter) {
+            await makeMove('hangman', {letter});
+        }
+
+        async function makeMove(game, move) {
+            try {
+                await apiPost('/api/game/move', {game, move});
+            } catch (e) {
+                console.error('Failed to make move:', e);
+            }
         }
 
         // ===== INIT =====
+        loadBalance();
         console.log('🏎️ Гонка за деньги - Web App загружен');
-        
-        // Запрашиваем данные при загрузке
-        setTimeout(() => {
-            getFullData();
-        }, 1000);
     </script>
 </body>
 </html>

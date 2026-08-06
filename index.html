@@ -319,7 +319,6 @@
             color: var(--text-primary);
         }
 
-        /* Mining Plans */
         .mining-plans {
             display: flex;
             flex-direction: column;
@@ -383,7 +382,6 @@
             color: var(--gold);
         }
 
-        /* Active Mining */
         .active-mining {
             background: var(--bg-card);
             border-radius: 14px;
@@ -456,7 +454,6 @@
             color: var(--text-secondary);
         }
 
-        /* Completed Mining */
         .completed-mining {
             background: var(--bg-card);
             border-radius: 14px;
@@ -497,7 +494,6 @@
             font-weight: 600;
         }
 
-        /* Mining Logo */
         .mining-logo {
             display: flex;
             align-items: center;
@@ -534,7 +530,6 @@
             color: var(--text-secondary);
         }
 
-        /* Referral Section */
         .referral-box {
             background: var(--bg-card);
             border-radius: 14px;
@@ -621,7 +616,6 @@
             color: var(--text-secondary);
         }
 
-        /* Profile */
         .profile-card {
             background: var(--bg-card);
             border-radius: 14px;
@@ -689,7 +683,6 @@
             margin-top: 16px;
         }
 
-        /* ===== BOTTOM NAV ===== */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -729,7 +722,6 @@
             color: var(--primary);
         }
 
-        /* ===== UTILITY ===== */
         .mt-10 { margin-top: 10px; }
         .mt-20 { margin-top: 20px; }
         .mb-20 { margin-bottom: 20px; }
@@ -737,7 +729,35 @@
         .text-muted { color: var(--text-secondary); }
         .hidden { display: none; }
 
-        /* ===== RESPONSIVE ===== */
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--primary);
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .toast.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
         @media (max-width: 400px) {
             .games-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -759,6 +779,9 @@
 </head>
 <body>
 
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
     <!-- ===== HEADER ===== -->
     <div class="header">
         <div class="header-top">
@@ -769,7 +792,7 @@
                     <span>Игровой клуб</span>
                 </div>
             </div>
-            <div class="header-balance" onclick="goTo('balance')">
+            <div class="header-balance" onclick="getBalance()">
                 <div class="label">💰 БАЛАНС</div>
                 <div>
                     <span class="amount" id="balance">0</span>
@@ -883,7 +906,6 @@
         <!-- ===== TAB: MINING ===== -->
         <div id="tab-mining" style="display:none;">
             
-            <!-- Mining Header with Logo -->
             <div class="mining-logo">
                 <div class="icon">⛏️</div>
                 <div class="text">
@@ -893,7 +915,6 @@
                 <div style="font-size:28px;">⚡</div>
             </div>
 
-            <!-- Mining Stats -->
             <div class="mining-header">
                 <div class="title">
                     <span>📊</span> Доходность фермы
@@ -912,7 +933,6 @@
                 </div>
             </div>
 
-            <!-- Active Mining -->
             <div class="active-mining" id="activeMining">
                 <div class="header">
                     <div class="title">⚡ Активные майнинги</div>
@@ -925,7 +945,6 @@
                 </div>
             </div>
 
-            <!-- Mining Plans -->
             <div class="section-title">📦 Доступные тарифы</div>
             <div class="mining-plans" id="miningPlans">
                 <div class="mining-plan" onclick="startMining(100, 24, 50)">
@@ -980,7 +999,6 @@
                 </div>
             </div>
 
-            <!-- Completed Mining -->
             <div class="completed-mining">
                 <div class="title">✅ Завершенные майнинги</div>
                 <div id="completedMiningContent">
@@ -1032,7 +1050,6 @@
             </div>
         </div>
 
-        <!-- Bottom padding for nav -->
         <div style="height:80px;"></div>
     </div>
 
@@ -1065,27 +1082,51 @@
             console.log('Not in Telegram WebApp');
         }
 
+        // ===== TOAST =====
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
         // ===== FUNCTIONS =====
         function sendToBot(data) {
             if (tg) {
-                tg.sendData(JSON.stringify(data));
-                tg.close();
+                try {
+                    tg.sendData(JSON.stringify(data));
+                    // ⚠️ НЕ ЗАКРЫВАЕМ ПРИЛОЖЕНИЕ!
+                    // tg.close();  // УДАЛИТЬ ЭТУ СТРОКУ!
+                    showToast('✅ Отправлено в бота');
+                } catch(e) {
+                    showToast('❌ Ошибка: ' + e.message);
+                }
             } else {
-                alert('Открыто в браузере! Откройте через Telegram бота: @goncamoney_bot');
+                showToast('⚠️ Откройте через Telegram бота');
                 console.log('Send to bot:', data);
             }
         }
 
         function playGame(game) {
             sendToBot({ action: 'game', game: game });
+            showToast('🎮 Запуск игры ' + game);
         }
 
         function goTo(page) {
             sendToBot({ action: 'navigate', page: page });
+            showToast('📍 Переход на ' + page);
+        }
+
+        function getBalance() {
+            sendToBot({ action: 'get_balance' });
         }
 
         function getDailyBonus() {
             sendToBot({ action: 'daily_bonus' });
+            showToast('🎁 Запрос бонуса отправлен');
         }
 
         function startMining(amount, hours, percent) {
@@ -1095,6 +1136,11 @@
                 hours: hours, 
                 percent: percent 
             });
+            showToast('⛏️ Запуск майнинга на ' + amount + ' ₽');
+        }
+
+        function getFullData() {
+            sendToBot({ action: 'get_full_data' });
         }
 
         function switchTab(tab) {
@@ -1114,10 +1160,14 @@
                 document.getElementById('tab-mining').style.display = 'block';
                 document.querySelector('.tab-btn[onclick*="mining"]').classList.add('active');
                 document.querySelector('.nav-item[onclick*="mining"]').classList.add('active');
+                // Обновляем данные майнинга при переходе
+                getFullData();
             } else if (tab === 'profile') {
                 document.getElementById('tab-profile').style.display = 'block';
                 document.querySelector('.tab-btn[onclick*="profile"]').classList.add('active');
                 document.querySelector('.nav-item[onclick*="profile"]').classList.add('active');
+                // Обновляем данные профиля при переходе
+                getFullData();
             }
         }
 
@@ -1145,7 +1195,7 @@
         function updateMining(data) {
             if (data.totalInvested) document.getElementById('totalInvested').textContent = data.totalInvested + ' ₽';
             if (data.totalProfit) document.getElementById('totalProfit').textContent = data.totalProfit + ' ₽';
-            if (data.activeCount) document.getElementById('activeCount').textContent = data.activeCount + ' активных';
+            if (data.activeCount !== undefined) document.getElementById('activeCount').textContent = data.activeCount + ' активных';
 
             const activeContent = document.getElementById('activeMiningContent');
             if (data.active && data.active.length > 0) {
@@ -1198,20 +1248,32 @@
         }
 
         // ===== RECEIVE DATA FROM BOT =====
-        window.addEventListener('message', function(e) {
-            try {
-                const data = JSON.parse(e.data);
-                if (data.type === 'update') {
-                    if (data.balance !== undefined) updateBalance(data.balance);
-                    if (data.played !== undefined) updateStats(data.played, data.won, data.referrals);
-                    if (data.profile) updateProfile(data.profile);
-                    if (data.mining) updateMining(data.mining);
+        // Бот отправляет обновления как JSON в сообщениях
+        // Мы их перехватываем через Telegram.WebApp.onEvent
+        if (tg) {
+            tg.onEvent('message', function(message) {
+                try {
+                    const data = JSON.parse(message);
+                    if (data.type === 'update') {
+                        if (data.balance !== undefined) updateBalance(data.balance);
+                        if (data.played !== undefined) updateStats(data.played, data.won, data.referrals);
+                        if (data.profile) updateProfile(data.profile);
+                        if (data.mining) updateMining(data.mining);
+                        showToast('🔄 Данные обновлены');
+                    }
+                } catch(e) {
+                    // Это обычное сообщение, не JSON
                 }
-            } catch(e) {}
-        });
+            });
+        }
 
         // ===== INIT =====
         console.log('🏎️ Гонка за деньги - Web App загружен');
+        
+        // Запрашиваем данные при загрузке
+        setTimeout(() => {
+            getFullData();
+        }, 1000);
     </script>
 </body>
 </html>

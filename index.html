@@ -1091,7 +1091,8 @@
         }
 
         async function apiPost(path, data) {
-            const res = await fetch(path, {
+            const url = new URL(path, API_BASE);
+            const res = await fetch(url.toString(), {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({user_id: userId, ...data})

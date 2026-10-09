@@ -1,1 +1,0 @@
-# gonka za money
